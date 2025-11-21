@@ -28,6 +28,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _gradientEnabled;
 
+    [ObservableProperty]
+    private bool _includeToolbarInScreenshot;
+
     public void LoadFromToolbarViewModel(MainToolbarViewModel toolbarViewModel)
     {
         MagicPenFadeDurationMs = toolbarViewModel.MagicPenFadeDurationMs;
@@ -36,6 +39,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         PenWidth = toolbarViewModel.PenWidth;
         EraserSize = toolbarViewModel.EraserSize;
         GradientEnabled = toolbarViewModel.GradientEnabled;
+        IncludeToolbarInScreenshot = toolbarViewModel.IncludeToolbarInScreenshot;
     }
 
     public void ApplyToToolbarViewModel(MainToolbarViewModel toolbarViewModel)
@@ -46,5 +50,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         toolbarViewModel.PenWidth = PenWidth;
         toolbarViewModel.EraserSize = EraserSize;
         toolbarViewModel.GradientEnabled = GradientEnabled;
+        toolbarViewModel.IncludeToolbarInScreenshot = IncludeToolbarInScreenshot;
     }
 }

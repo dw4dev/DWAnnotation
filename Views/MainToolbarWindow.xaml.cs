@@ -60,6 +60,9 @@ public partial class MainToolbarWindow : Window
         {
             _overlayWindow = new OverlayWindow(_viewModel);
             
+            // Set reference to toolbar window for screenshot control
+            _overlayWindow.ToolbarWindow = this;
+            
             // Ensure overlay closes when toolbar closes
             _overlayWindow.Closed += (s, e) => _overlayWindow = null;
             

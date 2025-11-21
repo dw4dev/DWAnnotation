@@ -28,6 +28,9 @@ public sealed class AppSettings
     [JsonPropertyName("magicPenEnabled")]
     public bool MagicPenEnabled { get; set; } = false;
 
+    [JsonPropertyName("includeToolbarInScreenshot")]
+    public bool IncludeToolbarInScreenshot { get; set; } = false;
+
     public static AppSettings CreateDefault() => new()
     {
         MagicPenFadeDurationMs = 800,
@@ -36,7 +39,8 @@ public sealed class AppSettings
         PenWidth = 3.0,
         EraserSize = 20.0,
         GradientEnabled = false,
-        MagicPenEnabled = false
+        MagicPenEnabled = false,
+        IncludeToolbarInScreenshot = false
     };
 }
 

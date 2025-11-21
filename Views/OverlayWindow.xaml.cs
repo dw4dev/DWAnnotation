@@ -21,6 +21,9 @@ public partial class OverlayWindow : Window
     private Stroke? _currentStroke;
     private bool _isDrawingShape;
 
+    // Reference to toolbar window for screenshot control
+    public Window? ToolbarWindow { get; set; }
+
     public OverlayWindow(MainToolbarViewModel toolbarViewModel)
     {
         _toolbarViewModel = toolbarViewModel;
@@ -456,6 +459,9 @@ public partial class OverlayWindow : Window
 
             this.Background = System.Windows.Media.Brushes.Transparent;
             this.IsHitTestVisible = false;
+            
+            // Keep window focusable to receive keyboard events (e.g., ESC key)
+            this.Focusable = true;
         }
     }
 
@@ -472,6 +478,10 @@ public partial class OverlayWindow : Window
         {
             SaveToPng(dialog.FileName);
         }
+
+        // Restore focus to overlay window after dialog closes
+        this.Focus();
+        this.Activate();
     }
 
     private void SaveToPng(string filePath)
@@ -502,6 +512,12 @@ public partial class OverlayWindow : Window
         {
             System.Windows.MessageBox.Show($"複製失敗: {ex.Message}", "錯誤", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+        finally
+        {
+            // Restore focus to overlay window after clipboard operation
+            this.Focus();
+            this.Activate();
+        }
     }
 
     private System.Windows.Media.Imaging.BitmapSource CaptureScreenWithAnnotations()
@@ -511,41 +527,66 @@ public partial class OverlayWindow : Window
         int screenWidth = (int)SystemParameters.VirtualScreenWidth;
         int screenHeight = (int)SystemParameters.VirtualScreenHeight;
 
-        // Capture desktop screenshot
-        using var desktopBitmap = new System.Drawing.Bitmap(screenWidth, screenHeight);
-        using (var g = System.Drawing.Graphics.FromImage(desktopBitmap))
+        bool wasToolbarVisible = false;
+
+        try
         {
-            g.CopyFromScreen(screenLeft, screenTop, 0, 0, desktopBitmap.Size);
+            // 如果設定為不包含工具列，則在截圖前隱藏工具列
+            if (!_toolbarViewModel.IncludeToolbarInScreenshot && ToolbarWindow != null)
+            {
+                wasToolbarVisible = ToolbarWindow.IsVisible;
+                if (wasToolbarVisible)
+                {
+                    ToolbarWindow.Hide();
+                    // 等待視窗完全隱藏
+                    System.Threading.Thread.Sleep(100);
+                }
+            }
+
+            // 截取整個螢幕
+            using var screenBitmap = new System.Drawing.Bitmap(screenWidth, screenHeight);
+            using (var g = System.Drawing.Graphics.FromImage(screenBitmap))
+            {
+                g.CopyFromScreen(screenLeft, screenTop, 0, 0, screenBitmap.Size);
+            }
+
+            // Convert System.Drawing.Bitmap to BitmapSource
+            var screenBitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                screenBitmap.GetHbitmap(),
+                IntPtr.Zero,
+                Int32Rect.Empty,
+                System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+
+            // Create a DrawingVisual to combine screen and annotations
+            var drawingVisual = new DrawingVisual();
+            using (var drawingContext = drawingVisual.RenderOpen())
+            {
+                // Draw screen screenshot as background
+                drawingContext.DrawImage(screenBitmapSource, new Rect(0, 0, screenWidth, screenHeight));
+
+                // Draw annotations on top
+                var visualBrush = new VisualBrush(DrawingCanvas);
+                drawingContext.DrawRectangle(visualBrush, null, new Rect(0, 0, screenWidth, screenHeight));
+            }
+
+            // Render to bitmap
+            var renderTarget = new System.Windows.Media.Imaging.RenderTargetBitmap(
+                screenWidth,
+                screenHeight,
+                96, 96,
+                PixelFormats.Pbgra32);
+
+            renderTarget.Render(drawingVisual);
+
+            return renderTarget;
         }
-
-        // Convert System.Drawing.Bitmap to BitmapSource
-        var desktopBitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
-            desktopBitmap.GetHbitmap(),
-            IntPtr.Zero,
-            Int32Rect.Empty,
-            System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
-
-        // Create a DrawingVisual to combine desktop and annotations
-        var drawingVisual = new DrawingVisual();
-        using (var drawingContext = drawingVisual.RenderOpen())
+        finally
         {
-            // Draw desktop screenshot as background
-            drawingContext.DrawImage(desktopBitmapSource, new Rect(0, 0, screenWidth, screenHeight));
-
-            // Draw annotations on top
-            var visualBrush = new VisualBrush(DrawingCanvas);
-            drawingContext.DrawRectangle(visualBrush, null, new Rect(0, 0, screenWidth, screenHeight));
+            // 恢復工具列的顯示狀態
+            if (!_toolbarViewModel.IncludeToolbarInScreenshot && ToolbarWindow != null && wasToolbarVisible)
+            {
+                ToolbarWindow.Show();
+            }
         }
-
-        // Render to bitmap
-        var renderTarget = new System.Windows.Media.Imaging.RenderTargetBitmap(
-            screenWidth,
-            screenHeight,
-            96, 96,
-            PixelFormats.Pbgra32);
-
-        renderTarget.Render(drawingVisual);
-
-        return renderTarget;
     }
 }
