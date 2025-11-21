@@ -110,6 +110,7 @@ public partial class MainToolbarWindow : Window
             PenBtn.IsChecked = false;
             LineBtn.IsChecked = false;
             RectangleBtn.IsChecked = false;
+            EllipseBtn.IsChecked = false;
             EraserPointBtn.IsChecked = false;
             EraserObjectBtn.IsChecked = false;
         }
@@ -145,6 +146,14 @@ public partial class MainToolbarWindow : Window
         _overlayWindow?.UpdateTool();
     }
 
+    private void EllipseBtn_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.CurrentTool = Models.DrawingTool.Ellipse;
+        SetDrawingMode(true);
+        UpdateToolSelection(EllipseBtn);
+        _overlayWindow?.UpdateTool();
+    }
+
     private void EraserPointBtn_Click(object sender, RoutedEventArgs e)
     {
         _viewModel.CurrentTool = Models.DrawingTool.EraserPoint;
@@ -166,6 +175,7 @@ public partial class MainToolbarWindow : Window
         PenBtn.IsChecked = false;
         LineBtn.IsChecked = false;
         RectangleBtn.IsChecked = false;
+        EllipseBtn.IsChecked = false;
         EraserPointBtn.IsChecked = false;
         EraserObjectBtn.IsChecked = false;
         selectedButton.IsChecked = true;
@@ -176,6 +186,7 @@ public partial class MainToolbarWindow : Window
         PenBtn.IsChecked = _viewModel.CurrentTool == Models.DrawingTool.Pen;
         LineBtn.IsChecked = _viewModel.CurrentTool == Models.DrawingTool.Line;
         RectangleBtn.IsChecked = _viewModel.CurrentTool == Models.DrawingTool.Rectangle;
+        EllipseBtn.IsChecked = _viewModel.CurrentTool == Models.DrawingTool.Ellipse;
         EraserPointBtn.IsChecked = _viewModel.CurrentTool == Models.DrawingTool.EraserPoint;
         EraserObjectBtn.IsChecked = _viewModel.CurrentTool == Models.DrawingTool.EraserObject;
     }

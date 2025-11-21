@@ -160,6 +160,7 @@ public partial class OverlayWindow : Window
 
             case DrawingTool.Line:
             case DrawingTool.Rectangle:
+            case DrawingTool.Ellipse:
                 // We handle drawing manually for shapes
                 DrawingCanvas.EditingMode = InkCanvasEditingMode.None;
                 DrawingCanvas.IsHitTestVisible = true;
@@ -254,7 +255,8 @@ public partial class OverlayWindow : Window
     {
         // Handle shape drawing initiation
         if (_viewModel.CurrentTool == DrawingTool.Line || 
-            _viewModel.CurrentTool == DrawingTool.Rectangle)
+            _viewModel.CurrentTool == DrawingTool.Rectangle ||
+            _viewModel.CurrentTool == DrawingTool.Ellipse)
         {
             _startPoint = e.GetPosition(DrawingCanvas);
             _isDrawingShape = true;
@@ -289,15 +291,20 @@ public partial class OverlayWindow : Window
         if (_isDrawingShape && _currentStroke != null)
         {
             var currentPoint = e.GetPosition(DrawingCanvas);
+            bool isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
             StylusPointCollection newPoints;
 
             if (_viewModel.CurrentTool == DrawingTool.Line)
             {
-                newPoints = GenerateLinePoints(_startPoint, currentPoint);
+                newPoints = GenerateLinePoints(_startPoint, currentPoint, isShiftPressed);
             }
-            else // Rectangle
+            else if (_viewModel.CurrentTool == DrawingTool.Rectangle)
             {
-                newPoints = GenerateRectanglePoints(_startPoint, currentPoint);
+                newPoints = GenerateRectanglePoints(_startPoint, currentPoint, isShiftPressed);
+            }
+            else // Ellipse
+            {
+                newPoints = GenerateEllipsePoints(_startPoint, currentPoint, isShiftPressed);
             }
 
             // Update stroke points
@@ -324,24 +331,57 @@ public partial class OverlayWindow : Window
         }
     }
 
-    private StylusPointCollection GenerateLinePoints(System.Windows.Point start, System.Windows.Point end)
+    private StylusPointCollection GenerateLinePoints(System.Windows.Point start, System.Windows.Point end, bool constrainToAxis = false)
     {
+        var finalEnd = end;
+
+        if (constrainToAxis)
+        {
+            // Constrain to horizontal or vertical line
+            var dx = Math.Abs(end.X - start.X);
+            var dy = Math.Abs(end.Y - start.Y);
+
+            if (dx > dy)
+            {
+                // Horizontal line
+                finalEnd = new System.Windows.Point(end.X, start.Y);
+            }
+            else
+            {
+                // Vertical line
+                finalEnd = new System.Windows.Point(start.X, end.Y);
+            }
+        }
+
         // Simple 2-point line is enough for Stroke to render a straight line
         return new StylusPointCollection
         {
             new StylusPoint(start.X, start.Y),
-            new StylusPoint(end.X, end.Y)
+            new StylusPoint(finalEnd.X, finalEnd.Y)
         };
     }
 
-    private StylusPointCollection GenerateRectanglePoints(System.Windows.Point start, System.Windows.Point end)
+    private StylusPointCollection GenerateRectanglePoints(System.Windows.Point start, System.Windows.Point end, bool constrainToSquare = false)
     {
         var points = new StylusPointCollection();
         
-        var left = Math.Min(start.X, end.X);
-        var top = Math.Min(start.Y, end.Y);
-        var right = Math.Max(start.X, end.X);
-        var bottom = Math.Max(start.Y, end.Y);
+        double currentX = end.X;
+        double currentY = end.Y;
+
+        if (constrainToSquare)
+        {
+            double dx = end.X - start.X;
+            double dy = end.Y - start.Y;
+            double max = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            
+            currentX = start.X + (dx >= 0 ? max : -max);
+            currentY = start.Y + (dy >= 0 ? max : -max);
+        }
+        
+        var left = Math.Min(start.X, currentX);
+        var top = Math.Min(start.Y, currentY);
+        var right = Math.Max(start.X, currentX);
+        var bottom = Math.Max(start.Y, currentY);
 
         // Top-Left -> Top-Right
         points.Add(new StylusPoint(left, top));
@@ -355,6 +395,47 @@ public partial class OverlayWindow : Window
         
         // Bottom-Left -> Top-Left (Close the loop)
         points.Add(new StylusPoint(left, top));
+
+        return points;
+    }
+
+    private StylusPointCollection GenerateEllipsePoints(System.Windows.Point start, System.Windows.Point end, bool constrainToCircle = false)
+    {
+        var points = new StylusPointCollection();
+
+        double currentX = end.X;
+        double currentY = end.Y;
+
+        if (constrainToCircle)
+        {
+            double dx = end.X - start.X;
+            double dy = end.Y - start.Y;
+            double max = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            
+            currentX = start.X + (dx >= 0 ? max : -max);
+            currentY = start.Y + (dy >= 0 ? max : -max);
+        }
+
+        double left = Math.Min(start.X, currentX);
+        double top = Math.Min(start.Y, currentY);
+        double width = Math.Abs(currentX - start.X);
+        double height = Math.Abs(currentY - start.Y);
+        
+        double centerX = left + width / 2;
+        double centerY = top + height / 2;
+        double rx = width / 2;
+        double ry = height / 2;
+
+        // Generate points approximating an ellipse
+        // Using 72 segments (5 degrees per segment) for smoothness
+        int segments = 72; 
+        for (int i = 0; i <= segments; i++)
+        {
+            double theta = (i * 2 * Math.PI) / segments;
+            double px = centerX + rx * Math.Cos(theta);
+            double py = centerY + ry * Math.Sin(theta);
+            points.Add(new StylusPoint(px, py));
+        }
 
         return points;
     }
@@ -373,17 +454,34 @@ public partial class OverlayWindow : Window
                 return;
 
             var opacity = 1.0 - ((double)(i + 1) / steps);
-            var newColor = System.Windows.Media.Color.FromArgb(
-                (byte)(opacity * 255),
-                stroke.DrawingAttributes.Color.R,
-                stroke.DrawingAttributes.Color.G,
-                stroke.DrawingAttributes.Color.B
-            );
-            
-            // Must clone attributes to trigger update
-            var newAttr = stroke.DrawingAttributes.Clone();
-            newAttr.Color = newColor;
-            stroke.DrawingAttributes = newAttr;
+
+            if (stroke is GradientStroke gradientStroke)
+            {
+                // Handle GradientStroke: modify Brush opacity
+                // Clone the brush to trigger update
+                var newBrush = gradientStroke.Brush.Clone();
+                newBrush.Opacity = opacity;
+                gradientStroke.Brush = newBrush;
+                
+                // Force redraw by slightly modifying DrawingAttributes (hack to trigger DrawCore)
+                var attr = gradientStroke.DrawingAttributes.Clone();
+                gradientStroke.DrawingAttributes = attr;
+            }
+            else
+            {
+                // Handle normal Stroke: modify Color alpha
+                var newColor = System.Windows.Media.Color.FromArgb(
+                    (byte)(opacity * 255),
+                    stroke.DrawingAttributes.Color.R,
+                    stroke.DrawingAttributes.Color.G,
+                    stroke.DrawingAttributes.Color.B
+                );
+                
+                // Must clone attributes to trigger update
+                var newAttr = stroke.DrawingAttributes.Clone();
+                newAttr.Color = newColor;
+                stroke.DrawingAttributes = newAttr;
+            }
         }
 
         DrawingCanvas.Strokes.Remove(stroke);
