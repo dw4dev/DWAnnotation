@@ -171,6 +171,15 @@
                     <fa:IconImage Icon="Square" />
                 </ToggleButton>
 
+                <!--  Ellipse Tool  -->
+                <ToggleButton
+                    x:Name="EllipseBtn"
+                    Click="EllipseBtn_Click"
+                    Style="{StaticResource ToggleButtonStyle}"
+                    ToolTip="圓形">
+                    <fa:IconImage Icon="Circle" />
+                </ToggleButton>
+
                 <!--  Eraser Point Tool (Arbitrary)  -->
                 <ToggleButton
                     x:Name="EraserPointBtn"
