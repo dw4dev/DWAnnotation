@@ -14,12 +14,9 @@ public sealed class SettingsService
 
     public SettingsService()
     {
-        var appDataPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "FloatingAnnotationTool"
-        );
-        Directory.CreateDirectory(appDataPath);
-        _settingsPath = Path.Combine(appDataPath, "settings.json");
+        // Store settings in the same directory as the executable
+        var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        _settingsPath = Path.Combine(appDirectory, "settings.json");
     }
 
     public async Task<AppSettings> LoadSettingsAsync()

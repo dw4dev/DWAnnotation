@@ -1,2 +1,5 @@
 /bin
 /obj
+
+# 用戶設定檔
+settings.json

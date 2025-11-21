@@ -6,7 +6,7 @@
     xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Floating Toolbar"
-    Width="570"
+    Width="640"
     Height="50"
     AllowsTransparency="True"
     Background="Transparent"
@@ -250,6 +250,24 @@
                     Style="{StaticResource ToolbarButtonStyle}"
                     ToolTip="復原">
                     <fa:IconImage Icon="Undo" />
+                </Button>
+
+                <!--  Save to PNG  -->
+                <Button
+                    x:Name="SaveBtn"
+                    Click="SaveBtn_Click"
+                    Style="{StaticResource ToolbarButtonStyle}"
+                    ToolTip="儲存為 PNG (Ctrl+S)">
+                    <fa:IconImage Icon="FloppyDisk" />
+                </Button>
+
+                <!--  Copy to Clipboard  -->
+                <Button
+                    x:Name="CopyBtn"
+                    Click="CopyBtn_Click"
+                    Style="{StaticResource ToolbarButtonStyle}"
+                    ToolTip="複製到剪貼簿 (Ctrl+C)">
+                    <fa:IconImage Icon="Copy" />
                 </Button>
 
                 <!--  Clear All  -->

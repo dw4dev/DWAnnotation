@@ -63,6 +63,13 @@ public partial class MainToolbarWindow : Window
             // Ensure overlay closes when toolbar closes
             _overlayWindow.Closed += (s, e) => _overlayWindow = null;
             
+            // Subscribe to exit annotation mode event
+            _overlayWindow.ExitAnnotationModeRequested += (s, e) => 
+            {
+                SetDrawingMode(false);
+                _viewModel.CurrentTool = DrawingTool.None;
+            };
+            
             _overlayWindow.Show();
             
             // Default to View Mode (Cursor)
@@ -231,6 +238,16 @@ public partial class MainToolbarWindow : Window
         _viewModel.UndoCommand.Execute(null);
     }
 
+    private void SaveBtn_Click(object sender, RoutedEventArgs e)
+    {
+        _overlayWindow?.PerformSave();
+    }
+
+    private void CopyBtn_Click(object sender, RoutedEventArgs e)
+    {
+        _overlayWindow?.PerformCopy();
+    }
+
     private void ClearBtn_Click(object sender, RoutedEventArgs e)
     {
         _viewModel.ClearCommand.Execute(null);
@@ -243,12 +260,14 @@ public partial class MainToolbarWindow : Window
 
     private void MinimizeBtn_Click(object sender, RoutedEventArgs e)
     {
+        // Minimize to system tray
         Hide();
     }
 
     private void ExitBtn_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.ExitCommand.Execute(null);
+        // Exit the application
+        ((App)System.Windows.Application.Current).ExitApplication();
     }
 
     private void UpdateColorBrushes()
