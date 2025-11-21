@@ -9,7 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>12</LangVersion>
     <AssemblyName>DWAnnotation</AssemblyName>
-    <RootNamespace>FloatingAnnotationTool</RootNamespace>
+    <RootNamespace>DWAnnotation</RootNamespace>
     <ApplicationIcon>Assets\Icons\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 

@@ -1,8 +1,8 @@
-using FloatingAnnotationTool.Models;
+using DWAnnotation.Models;
 using System.IO;
 using System.Text.Json;
 
-namespace FloatingAnnotationTool.Services;
+namespace DWAnnotation.Services;
 
 /// <summary>
 /// Service for managing application settings persistence

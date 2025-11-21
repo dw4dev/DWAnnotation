@@ -1,12 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FloatingAnnotationTool.Models;
-using FloatingAnnotationTool.Services;
+using DWAnnotation.Models;
+using DWAnnotation.Services;
 using System.Reflection;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace FloatingAnnotationTool.ViewModels;
+namespace DWAnnotation.ViewModels;
 
 /// <summary>
 /// ViewModel for the main toolbar window

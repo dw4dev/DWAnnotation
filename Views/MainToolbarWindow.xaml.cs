@@ -1,11 +1,11 @@
-using FloatingAnnotationTool.ViewModels;
-using FloatingAnnotationTool.Models;
+using DWAnnotation.ViewModels;
+using DWAnnotation.Models;
 using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace FloatingAnnotationTool.Views;
+namespace DWAnnotation.Views;
 
 /// <summary>
 /// MainToolbarWindow - Floating toolbar with draggable support

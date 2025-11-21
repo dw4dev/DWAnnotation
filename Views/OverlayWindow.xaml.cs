@@ -1,5 +1,5 @@
-using FloatingAnnotationTool.Models;
-using FloatingAnnotationTool.ViewModels;
+using DWAnnotation.Models;
+using DWAnnotation.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Ink;
@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace FloatingAnnotationTool.Views;
+namespace DWAnnotation.Views;
 
 /// <summary>
 /// OverlayWindow - Full-screen transparent annotation overlay

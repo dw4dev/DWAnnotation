@@ -1,9 +1,9 @@
-﻿using FloatingAnnotationTool.Services;
-using FloatingAnnotationTool.ViewModels;
-using FloatingAnnotationTool.Views;
+﻿using DWAnnotation.Services;
+using DWAnnotation.ViewModels;
+using DWAnnotation.Views;
 using System.Linq;
 
-namespace FloatingAnnotationTool;
+namespace DWAnnotation;
 
 /// <summary>
 /// Interaction logic for App.xaml
