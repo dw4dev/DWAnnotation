@@ -13,7 +13,9 @@
         WindowState="Normal"
         WindowStartupLocation="Manual"
         ShowInTaskbar="False"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Focusable="True"
+        PreviewKeyDown="OverlayWindow_PreviewKeyDown">
     
     <Grid Background="#01000000">
         <!-- Ink Canvas (for all drawings) -->

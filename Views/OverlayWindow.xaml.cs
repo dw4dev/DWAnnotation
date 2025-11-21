@@ -35,9 +35,6 @@ public partial class OverlayWindow : Window
         this.Width = SystemParameters.VirtualScreenWidth;
         this.Height = SystemParameters.VirtualScreenHeight;
 
-        // Register keyboard shortcuts
-        KeyDown += OverlayWindow_KeyDown;
-        
         // Register InkCanvas stroke collected event
         DrawingCanvas.StrokeCollected += DrawingCanvas_StrokeCollected;
 
@@ -45,19 +42,32 @@ public partial class OverlayWindow : Window
         UpdateBrush();
     }
 
-    private void OverlayWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    // Event to notify MainToolbarWindow to exit annotation mode
+    public event EventHandler? ExitAnnotationModeRequested;
+
+    private void ExitAnnotationMode()
+    {
+        ExitAnnotationModeRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+
+    private void OverlayWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
         {
-            Close();
+            // Exit annotation mode instead of closing window
+            ExitAnnotationMode();
+            e.Handled = true;
         }
         else if (e.Key == Key.Z && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
         {
             PerformUndo();
+            e.Handled = true;
         }
         else if (e.Key == Key.D && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
         {
             PerformUndo();
+            e.Handled = true;
         }
         else if (e.Key == Key.S && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
         {
@@ -392,6 +402,16 @@ public partial class OverlayWindow : Window
         _viewModel.ClearUndoStack();
     }
 
+    public void PerformSave()
+    {
+        SaveToFile();
+    }
+
+    public void PerformCopy()
+    {
+        CopyToClipboard();
+    }
+
     // Win32 API for click-through support
     private const int WS_EX_TRANSPARENT = 0x00000020;
     private const int GWL_EXSTYLE = -20;
@@ -416,6 +436,11 @@ public partial class OverlayWindow : Window
             // Use almost transparent color to capture mouse events
             this.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(1, 0, 0, 0)); 
             this.IsHitTestVisible = true;
+            
+            // Ensure window can receive keyboard input
+            this.Focusable = true;
+            this.Focus();
+            this.Activate();
             
             // Sync Magic Pen state when entering edit mode
             UpdateMagicPenMode();
@@ -451,46 +476,76 @@ public partial class OverlayWindow : Window
 
     private void SaveToPng(string filePath)
     {
-        var renderTarget = new System.Windows.Media.Imaging.RenderTargetBitmap(
-            (int)Width,
-            (int)Height,
-            96, 96,
-            PixelFormats.Pbgra32
-        );
-
-        var visual = new DrawingVisual();
-        using (var context = visual.RenderOpen())
+        try
         {
-            var visualBrush = new VisualBrush(this);
-            context.DrawRectangle(visualBrush, null, new Rect(new System.Windows.Point(), new System.Windows.Size(Width, Height)));
+            var screenshot = CaptureScreenWithAnnotations();
+            var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+            encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(screenshot));
+
+            using var stream = System.IO.File.Create(filePath);
+            encoder.Save(stream);
         }
-
-        renderTarget.Render(visual);
-
-        var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
-        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(renderTarget));
-
-        using var stream = System.IO.File.Create(filePath);
-        encoder.Save(stream);
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"儲存失敗: {ex.Message}", "錯誤", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void CopyToClipboard()
     {
-        var renderTarget = new System.Windows.Media.Imaging.RenderTargetBitmap(
-            (int)Width,
-            (int)Height,
-            96, 96,
-            PixelFormats.Pbgra32
-        );
-
-        var visual = new DrawingVisual();
-        using (var context = visual.RenderOpen())
+        try
         {
-            var visualBrush = new VisualBrush(this);
-            context.DrawRectangle(visualBrush, null, new Rect(new System.Windows.Point(), new System.Windows.Size(Width, Height)));
+            var screenshot = CaptureScreenWithAnnotations();
+            System.Windows.Clipboard.SetImage(screenshot);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"複製失敗: {ex.Message}", "錯誤", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private System.Windows.Media.Imaging.BitmapSource CaptureScreenWithAnnotations()
+    {
+        int screenLeft = (int)SystemParameters.VirtualScreenLeft;
+        int screenTop = (int)SystemParameters.VirtualScreenTop;
+        int screenWidth = (int)SystemParameters.VirtualScreenWidth;
+        int screenHeight = (int)SystemParameters.VirtualScreenHeight;
+
+        // Capture desktop screenshot
+        using var desktopBitmap = new System.Drawing.Bitmap(screenWidth, screenHeight);
+        using (var g = System.Drawing.Graphics.FromImage(desktopBitmap))
+        {
+            g.CopyFromScreen(screenLeft, screenTop, 0, 0, desktopBitmap.Size);
         }
 
-        renderTarget.Render(visual);
-        System.Windows.Clipboard.SetImage(renderTarget);
+        // Convert System.Drawing.Bitmap to BitmapSource
+        var desktopBitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+            desktopBitmap.GetHbitmap(),
+            IntPtr.Zero,
+            Int32Rect.Empty,
+            System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+
+        // Create a DrawingVisual to combine desktop and annotations
+        var drawingVisual = new DrawingVisual();
+        using (var drawingContext = drawingVisual.RenderOpen())
+        {
+            // Draw desktop screenshot as background
+            drawingContext.DrawImage(desktopBitmapSource, new Rect(0, 0, screenWidth, screenHeight));
+
+            // Draw annotations on top
+            var visualBrush = new VisualBrush(DrawingCanvas);
+            drawingContext.DrawRectangle(visualBrush, null, new Rect(0, 0, screenWidth, screenHeight));
+        }
+
+        // Render to bitmap
+        var renderTarget = new System.Windows.Media.Imaging.RenderTargetBitmap(
+            screenWidth,
+            screenHeight,
+            96, 96,
+            PixelFormats.Pbgra32);
+
+        renderTarget.Render(drawingVisual);
+
+        return renderTarget;
     }
 }

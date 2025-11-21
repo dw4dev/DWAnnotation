@@ -1,6 +1,7 @@
 ﻿using FloatingAnnotationTool.Services;
 using FloatingAnnotationTool.ViewModels;
 using FloatingAnnotationTool.Views;
+using System.Linq;
 
 namespace FloatingAnnotationTool;
 
@@ -12,6 +13,7 @@ public partial class App : System.Windows.Application
     private System.Windows.Forms.NotifyIcon? _notifyIcon;
     private MainToolbarWindow? _mainWindow;
     private readonly SettingsService _settingsService = new();
+    private bool _isExiting = false;
 
     private void Application_Startup(object sender, System.Windows.StartupEventArgs e)
     {
@@ -60,6 +62,31 @@ public partial class App : System.Windows.Application
 
         var contextMenu = new System.Windows.Forms.ContextMenuStrip();
         
+        // Handle context menu opening to temporarily disable overlay topmost
+        contextMenu.Opening += (s, e) =>
+        {
+            if (_mainWindow != null)
+            {
+                var overlayWindow = System.Windows.Application.Current.Windows.OfType<OverlayWindow>().FirstOrDefault();
+                if (overlayWindow != null)
+                {
+                    overlayWindow.Topmost = false;
+                }
+            }
+        };
+        
+        contextMenu.Closed += (s, e) =>
+        {
+            if (_mainWindow != null)
+            {
+                var overlayWindow = System.Windows.Application.Current.Windows.OfType<OverlayWindow>().FirstOrDefault();
+                if (overlayWindow != null)
+                {
+                    overlayWindow.Topmost = true;
+                }
+            }
+        };
+        
         var openItem = new System.Windows.Forms.ToolStripMenuItem("開啟工具列");
         openItem.Click += (s, e) => ShowMainWindow();
         contextMenu.Items.Add(openItem);
@@ -78,7 +105,7 @@ public partial class App : System.Windows.Application
         contextMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
 
         var exitItem = new System.Windows.Forms.ToolStripMenuItem("結束程式");
-        exitItem.Click += (s, e) => Shutdown();
+        exitItem.Click += (s, e) => ExitApplication();
         contextMenu.Items.Add(exitItem);
 
         _notifyIcon.ContextMenuStrip = contextMenu;
@@ -86,18 +113,26 @@ public partial class App : System.Windows.Application
 
     private void ShowMainWindow()
     {
-        if (_mainWindow != null)
+        // Don't try to show window if app is exiting or window is closed
+        if (_isExiting || _mainWindow == null)
+            return;
+
+        try
         {
             _mainWindow.Show();
             _mainWindow.WindowState = System.Windows.WindowState.Normal;
             _mainWindow.Activate();
         }
+        catch
+        {
+            // Window may have been closed, ignore
+        }
     }
 
     private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
-        // Minimize to tray instead of closing
-        if (_mainWindow != null)
+        // If exiting, allow close. Otherwise minimize to tray.
+        if (!_isExiting && _mainWindow != null)
         {
             e.Cancel = true;
             _mainWindow.Hide();
@@ -105,8 +140,37 @@ public partial class App : System.Windows.Application
         }
     }
 
+    public void ExitApplication()
+    {
+        _isExiting = true;
+        
+        // Dispose notify icon before shutdown to remove it from system tray
+        if (_notifyIcon != null)
+        {
+            _notifyIcon.Visible = false;
+            _notifyIcon.Dispose();
+            _notifyIcon = null;
+        }
+        
+        Shutdown();
+        System.Environment.Exit(0); // Force kill the process
+    }
+
     private void Application_Exit(object sender, System.Windows.ExitEventArgs e)
     {
+        // Save settings before exit
+        if (_mainWindow?.DataContext is MainToolbarViewModel viewModel)
+        {
+            try
+            {
+                viewModel.SaveSettingsAsync().Wait();
+            }
+            catch
+            {
+                // Ignore save errors on exit
+            }
+        }
+
         _notifyIcon?.Dispose();
     }
 }
