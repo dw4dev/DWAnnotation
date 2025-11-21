@@ -222,6 +222,25 @@
                                   FontSize="13"/>
                     </StackPanel>
                 </Border>
+
+                <!-- Screenshot Settings -->
+                <TextBlock Text="📸 截圖設定" Style="{StaticResource SectionHeaderStyle}"/>
+                <Border Background="White" 
+                        CornerRadius="6" 
+                        Padding="15"
+                        Margin="0,0,0,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" 
+                                        ShadowDepth="2" 
+                                        Opacity="0.1"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <CheckBox x:Name="IncludeToolbarInScreenshotCheckBox"
+                                  Content="截圖時包含工具列"
+                                  FontSize="13"
+                                  ToolTip="勾選後，儲存或複製截圖時會包含浮動工具列視窗"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

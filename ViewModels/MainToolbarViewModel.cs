@@ -42,6 +42,9 @@ public sealed partial class MainToolbarViewModel : ObservableObject
     [ObservableProperty]
     private int _magicPenFadeDurationMs = 800;
 
+    [ObservableProperty]
+    private bool _includeToolbarInScreenshot = false;
+
     public string AppTitle
     {
         get
@@ -75,6 +78,7 @@ public sealed partial class MainToolbarViewModel : ObservableObject
         EraserSize = settings.EraserSize;
         GradientEnabled = settings.GradientEnabled;
         MagicPenFadeDurationMs = settings.MagicPenFadeDurationMs;
+        IncludeToolbarInScreenshot = settings.IncludeToolbarInScreenshot;
     }
 
     public async Task SaveSettingsAsync()
@@ -86,7 +90,8 @@ public sealed partial class MainToolbarViewModel : ObservableObject
             PenWidth = PenWidth,
             EraserSize = EraserSize,
             GradientEnabled = GradientEnabled,
-            MagicPenFadeDurationMs = MagicPenFadeDurationMs
+            MagicPenFadeDurationMs = MagicPenFadeDurationMs,
+            IncludeToolbarInScreenshot = IncludeToolbarInScreenshot
         };
 
         await _settingsService.SaveSettingsAsync(settings);

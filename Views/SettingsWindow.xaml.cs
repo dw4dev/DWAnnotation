@@ -28,6 +28,7 @@ public partial class SettingsWindow : Window
         PenWidthSlider.Value = _viewModel.PenWidth;
         EraserSizeSlider.Value = _viewModel.EraserSize;
         GradientEnabledCheckBox.IsChecked = _viewModel.GradientEnabled;
+        IncludeToolbarInScreenshotCheckBox.IsChecked = _viewModel.IncludeToolbarInScreenshot;
 
         UpdateColorBrushes();
     }
@@ -96,6 +97,7 @@ public partial class SettingsWindow : Window
         _viewModel.PenWidth = PenWidthSlider.Value;
         _viewModel.EraserSize = EraserSizeSlider.Value;
         _viewModel.GradientEnabled = GradientEnabledCheckBox.IsChecked ?? false;
+        _viewModel.IncludeToolbarInScreenshot = IncludeToolbarInScreenshotCheckBox.IsChecked ?? false;
 
         // Apply to toolbar ViewModel
         _viewModel.ApplyToToolbarViewModel(_toolbarViewModel);
