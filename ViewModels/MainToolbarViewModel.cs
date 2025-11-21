@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FloatingAnnotationTool.Models;
 using FloatingAnnotationTool.Services;
+using System.Reflection;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace FloatingAnnotationTool.ViewModels;
@@ -39,6 +41,23 @@ public sealed partial class MainToolbarViewModel : ObservableObject
 
     [ObservableProperty]
     private int _magicPenFadeDurationMs = 800;
+
+    public string AppTitle
+    {
+        get
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var version = assembly.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            
+            // Fallback to standard version if InformationalVersion is missing
+            if (string.IsNullOrEmpty(version))
+            {
+                version = assembly.GetName().Version?.ToString();
+            }
+            
+            return $"DWAnnotation ({version})";
+        }
+    }
 
     public MainToolbarViewModel(SettingsService settingsService)
     {
