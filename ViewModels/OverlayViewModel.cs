@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FloatingAnnotationTool.Models;
+using DWAnnotation.Models;
 using System.Windows;
 using System.Windows.Ink;
 using System.Windows.Media;
 
-namespace FloatingAnnotationTool.ViewModels;
+namespace DWAnnotation.ViewModels;
 
 /// <summary>
 /// ViewModel for the overlay annotation window

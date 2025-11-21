@@ -3,7 +3,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows;
 
-namespace FloatingAnnotationTool.Models;
+namespace DWAnnotation.Models;
 
 public class GradientStroke : Stroke
 {

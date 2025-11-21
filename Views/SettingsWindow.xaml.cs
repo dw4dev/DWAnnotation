@@ -1,8 +1,8 @@
-using FloatingAnnotationTool.ViewModels;
+using DWAnnotation.ViewModels;
 using System.Windows;
 using System.Windows.Media;
 
-namespace FloatingAnnotationTool.Views;
+namespace DWAnnotation.Views;
 
 /// <summary>
 /// SettingsWindow - Configuration dialog for application settings

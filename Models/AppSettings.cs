@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace FloatingAnnotationTool.Models;
+namespace DWAnnotation.Models;
 
 /// <summary>
 /// Application settings model with JSON source generation support

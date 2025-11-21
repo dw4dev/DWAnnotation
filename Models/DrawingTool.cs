@@ -1,4 +1,4 @@
-namespace FloatingAnnotationTool.Models;
+namespace DWAnnotation.Models;
 
 /// <summary>
 /// Drawing tool types
