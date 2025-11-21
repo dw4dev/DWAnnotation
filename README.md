@@ -129,4 +129,4 @@ MIT License
 
 ## 作者
 
-使用 Antigravity AI 開發
+Davidosn 使用 Antigravity AI 開發
