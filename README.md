@@ -1,4 +1,4 @@
-# 浮動標註工具 (Floating Annotation Tool)
+# DW螢幕標註工具 (DW Annotation)
 
 一個功能完整的 Windows 螢幕標註工具，使用 .NET 8、C# 12 和 WPF 開發。
 
