@@ -10,7 +10,7 @@
     Height="65"
     AllowsTransparency="True"
     Background="Transparent"
-    Icon="/Assets/Icons/AppIcon.ico"
+    Icon="pack://application:,,,/Assets/Icons/AppIcon.ico"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
     Topmost="True"
