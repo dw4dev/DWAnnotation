@@ -37,22 +37,25 @@
 5. **工具列縮小行為**：縮小時建議保留 icon 列（僅縮窄），滑鼠 hover 再展開完整面板，避免完全不可見
 6. **主題管理**：以 ResourceDictionary 做主題包（Light / Dark），每個主題定義全套語義色票（Background / Surface / Primary / OnPrimary / Outline 等），不使用 Hue 旋轉
 7. **設定視窗重構**：建議採用左側分類樹 + 右側內容面板（類似 VS Code Settings），方便後續新增設定分類
+8. **漸層色設定與多模式（新增）**：將漸層色設定移入設定視窗，並區分為兩種選項：
+   - **固定漸層色**（原模式）：由使用者設定 Primary/Secondary 顏色，並提供系統預設配色範本供快速套用。
+   - **動態漸層色**：系統內建幾十種漸層組合，每次繪製新線條時，以「隨機」或「循序循環」方式調用不同配色。
 
 ### 架構補強（v0.3 新增）
 
-8. **GDI HBitmap 記憶體洩漏修復**：`CaptureScreenWithAnnotations` 中 `GetHbitmap()` 未呼叫 `DeleteObject`，長時間使用記憶體持續增長
-9. **Run Text Binding 修正**：`<Run Text="{Binding}"/>` 預設 TwoWay，需加 `Mode=OneWay`
-10. **MVVM 一致性修正**：Ellipse / EraserPoint / EraserObject 在 code-behind 直接設 `_viewModel.CurrentTool`，不像 Pen / Line / Rectangle 走 Command
-11. **日誌框架**：引入 `Microsoft.Extensions.Logging`，對所有 catch 區塊記錄 warning/error
-12. **DI 容器**：引入 `Microsoft.Extensions.DependencyInjection`，`App.xaml.cs` 建立 `ServiceProvider`
-13. **Service 介面抽象**：`ISettingsService`、`IThemeService`、`IScreenshotService` 等，方便替換實作與測試
-14. **建立 .sln 解決方案檔**：方便 IDE 管理與未來加入測試專案
-15. **單元測試專案**：`DWAnnotation.Tests`（xUnit），對 Service 與 ViewModel 寫基本測試
-16. **覆蓋層 Redo**：現有只有 Undo（`Ctrl+Z`），補上 Redo（`Ctrl+Y`）
-17. **快捷鍵系統重構**：從硬編碼 if-else 改為 `KeyBinding` + `ICommand` 或集中式 `HotkeyService`
-18. **OverlayWindow.xaml.cs 分拆**：目前 691 行，Phase 3 新增功能前需先拆分
-19. **全域 DPI 感知策略**：不只長截圖，放大鏡等新功能也需統一的多螢幕 DPI 處理
-20. **基礎無障礙功能**：工具列按鈕加入 `AutomationProperties.Name`
+9. **GDI HBitmap 記憶體洩漏修復**：`CaptureScreenWithAnnotations` 中 `GetHbitmap()` 未呼叫 `DeleteObject`，長時間使用記憶體持續增長
+10. **Run Text Binding 修正**：`<Run Text="{Binding}"/>` 預設 TwoWay，需加 `Mode=OneWay`
+11. **MVVM 一致性修正**：Ellipse / EraserPoint / EraserObject 在 code-behind 直接設 `_viewModel.CurrentTool`，不像 Pen / Line / Rectangle 走 Command
+12. **日誌框架**：引入 `Microsoft.Extensions.Logging`，對所有 catch 區塊記錄 warning/error
+13. **DI 容器**：引入 `Microsoft.Extensions.DependencyInjection`，`App.xaml.cs` 建立 `ServiceProvider`
+14. **Service 介面抽象**：`ISettingsService`、`IThemeService`、`IScreenshotService` 等，方便替換實作與測試
+15. **建立 .sln 解決方案檔**：方便 IDE 管理與未來加入測試專案
+16. **單元測試專案**：`DWAnnotation.Tests`（xUnit），對 Service 與 ViewModel 寫基本測試
+17. **覆蓋層 Redo**：現有只有 Undo（`Ctrl+Z`），補上 Redo（`Ctrl+Y`）
+18. **快捷鍵系統重構**：從硬編碼 if-else 改為 `KeyBinding` + `ICommand` 或集中式 `HotkeyService`
+19. **OverlayWindow.xaml.cs 分拆**：目前 691 行，Phase 3 新增功能前需先拆分
+20. **全域 DPI 感知策略**：不只長截圖，放大鏡等新功能也需統一的多螢幕 DPI 處理
+21. **基礎無障礙功能**：工具列按鈕加入 `AutomationProperties.Name`
 
 ### 需求確認紀錄（2026-05-28 已定案）
 
@@ -76,8 +79,9 @@
 | 基礎無障礙功能 | ★☆☆☆☆ | XAML 加 AutomationProperties |
 | UI 重構 + 主題系統（§3） | ★★★☆☆ | ResourceDictionary 主題包，影響全域 |
 | 設定視窗重構（§4） | ★★★☆☆ | 架構改變，需重新設計 ViewModel |
-| 工具列自動縮小（§2.1） | ★★☆☆☆ | 偵測 Top 位置 + MouseEnter/Leave |
+| 工具列自動縮小（§2.1） | ★★☆☆• | 偵測 Top 位置 + MouseEnter/Leave |
 | 漸層按鈕圖示更換（§2.2） | ★☆☆☆☆ | 純 UI 資源替換 |
+| 漸層色功能升級（§2.3） | ★★☆☆☆ | 移入設定視窗，支援固定配色範本與隨機/循序動態漸層色 |
 | 快捷鍵系統重構 | ★★☆☆☆ | KeyBinding + ICommand 機制 |
 | 覆蓋層 Redo + MVVM 修正 | ★★☆☆☆ | Undo/Redo 堆疊 + Command 統一 |
 | OverlayWindow 分拆 | ★★☆☆☆ | 抽出 Helper/Behavior 類別 |
@@ -148,6 +152,11 @@
   - 偵測 `Window.Top < threshold`（如 50px）時啟用「靠頂縮小」模式
   - `MouseEnter` 展開，`MouseLeave` 延遲收起（200ms debounce）
   - §2.1.1 設定項：`ToolbarAutoCollapseEnabled`（bool）
+- [ ] §2.3 漸層色功能升級
+  - 移入設定視窗的「畫筆設定」頁面，提供兩種漸層色模式：
+    - **固定漸層色**：手動設定 `PrimaryColor` 與 `SecondaryColor`，並提供系統預設配色範本下拉選單。
+    - **動態漸層色**：內建幾十種配色組合，每次繪線時隨機或循序循環調用。
+  - §2.3.1 設定項：`GradientMode`（0:固定, 1:動態）、`GradientPresetName`（字串）、`DynamicGradientMode`（0:循序, 1:隨機）
 - [ ] **MVVM 一致性修正**
   - Ellipse / EraserPoint / EraserObject 改為走 `RelayCommand`，與 Pen / Line / Rectangle 一致
 - [ ] **快捷鍵系統重構**
@@ -293,6 +302,9 @@ public string ThemeName { get; set; } = "Light";
 
 // Phase 2
 public bool ToolbarAutoCollapseEnabled { get; set; } = true;
+public int GradientMode { get; set; } = 0;                     // 0: 固定漸層色, 1: 動態漸層色
+public string GradientPresetName { get; set; } = "Default";    // 配色範本名稱
+public int DynamicGradientMode { get; set; } = 0;              // 0: 循序循環, 1: 隨機
 
 // Phase 3
 public bool LaserPointerEnabled { get; set; } = false;
@@ -347,7 +359,8 @@ DWAnnotation/
 ├── Models/
 │   ├── AppSettings.cs                   [MODIFY] - 新增欄位
 │   ├── DrawingTool.cs                   [MODIFY] - 新增 LaserPointer, Spotlight, Magnifier
-│   └── IEditCommand.cs                  [NEW] - Undo/Redo Command Pattern 介面
+│   ├── IEditCommand.cs                  [NEW] - Undo/Redo Command Pattern 介面
+│   └── GradientPreset.cs                [NEW] - 定義配色範本與動態漸層組合
 ├── Services/
 │   ├── ISettingsService.cs              [NEW] - 介面
 │   ├── SettingsService.cs               [MODIFY] - 實作介面
