@@ -4,3 +4,13 @@
 # 用戶設定檔
 settings.json
 /build
+/src/obj
+/src/bin
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.env
+
+.vs/

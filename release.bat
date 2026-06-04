@@ -7,7 +7,7 @@ echo ====================================
 echo.
 
 set "OUTPUT_DIR=%~dp0build\dist"
-set "PROJ=%~dp0DWAnnotation.csproj"
+set "PROJ=%~dp0\src\DWAnnotation.csproj"
 
 echo [1/2] Cleaning old publish files...
 if exist "%OUTPUT_DIR%" rmdir /s /q "%OUTPUT_DIR%"
